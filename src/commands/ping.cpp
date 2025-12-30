@@ -40,8 +40,8 @@ Result<double> send_ping(Socket& sock, const sockaddr_in& addr, uint16_t seq) {
     ICMPPacket packet{};
     packet.header.type = ICMP_ECHO;
     packet.header.code = 0;
-    packet.header.un.echo.id = getpid();
-    packet.header.un.echo.sequence = seq;
+    packet.header.un.echo.id = htons(getpid() & 0xFFFF);
+    packet.header.un.echo.sequence = htons(seq);
     
     // Fill data with pattern
     for (size_t i = 0; i < sizeof(packet.data); ++i) {
@@ -60,12 +60,12 @@ Result<double> send_ping(Socket& sock, const sockaddr_in& addr, uint16_t seq) {
         return Result<double>(result.error);
     }
     
-    // Wait for reply
-    ICMPPacket reply{};
+    // Wait for reply (with IP header on Linux)
+    uint8_t buffer[1024];
     sockaddr_in from{};
     socklen_t fromlen = sizeof(from);
     
-    auto recv_result = sock.recvfrom(&reply, sizeof(reply),
+    auto recv_result = sock.recvfrom(buffer, sizeof(buffer),
         reinterpret_cast<sockaddr*>(&from), &fromlen);
     
     if (!recv_result) {
@@ -75,10 +75,18 @@ Result<double> send_ping(Socket& sock, const sockaddr_in& addr, uint16_t seq) {
     auto end = steady_clock::now();
     auto rtt = std::chrono::duration<double, std::milli>(end - start).count();
     
+    // Skip IP header (first 20 bytes typically)
+    size_t ip_hdr_len = (buffer[0] & 0x0F) * 4;
+    if (*recv_result < ip_hdr_len + sizeof(icmphdr)) {
+        return Result<double>("Packet too small");
+    }
+    
+    const icmphdr* reply = reinterpret_cast<const icmphdr*>(buffer + ip_hdr_len);
+    
     // Verify it's our packet
-    if (reply.header.type != ICMP_ECHOREPLY || 
-        reply.header.un.echo.id != getpid() ||
-        reply.header.un.echo.sequence != seq) {
+    if (reply->type != ICMP_ECHOREPLY || 
+        reply->un.echo.id != htons(getpid() & 0xFFFF) ||
+        reply->un.echo.sequence != htons(seq)) {
         return Result<double>("Invalid ICMP reply");
     }
     
