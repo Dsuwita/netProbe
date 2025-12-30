@@ -2,23 +2,50 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![C++20](https://img.shields.io/badge/C++-20-blue.svg)](https://isocpp.org/)
 
-## Installation
+Production-grade network diagnostic toolkit—fast, colorful, zero dependencies. Like `nmap` + `ping` + `curl` in one binary.
+
+## Quick Install
+
+### One-line installer (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Dsuwita/netProbe/main/install.sh | bash
+```
+
+Or download and inspect first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Dsuwita/netProbe/main/install.sh -o install.sh
+bash install.sh
+```
+
+### Manual installation
+
+Download the latest release for your platform:
+
+```bash
+# Linux x86_64
+wget https://github.com/Dsuwita/netProbe/releases/latest/download/netprobe-linux-x86_64
+chmod +x netprobe-linux-x86_64
+sudo mv netprobe-linux-x86_64 /usr/local/bin/netprobe
+
+# Set capabilities for raw sockets (ping/trace/sniff)
+sudo setcap cap_net_raw+ep /usr/local/bin/netprobe
+```
 
 ### Build from source
 
 ```bash
+git clone https://github.com/Dsuwita/netProbe.git
+cd netProbe
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
-sudo cmake --install build
-```
-
-### Quick install
-
-```bash
 sudo cp build/netprobe /usr/local/bin/
 sudo cp man/netprobe.1 /usr/local/share/man/man1/
-sudo setcap cap_net_raw+ep /usr/local/bin/netprobe  # For ping/trace/sniff
+sudo setcap cap_net_raw+ep /usr/local/bin/netprobe
 ```
+
+**Requirements:** CMake 3.20+, GCC 11+ or Clang 14+ (C++20 support)
 
 ## Commands
 
