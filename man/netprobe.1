@@ -1,0 +1,191 @@
+.TH NETPROBE 1 "December 2025" "NetProbe 1.0.0" "User Commands"
+.SH NAME
+netprobe \- network diagnostic toolkit
+.SH SYNOPSIS
+.B netprobe
+.I command
+[\fIoptions\fR]
+.SH DESCRIPTION
+.B NetProbe
+is a production-grade, single-binary CLI network diagnostic toolkit that provides
+fast and colorful network diagnostics with zero dependencies beyond STL and POSIX sockets.
+.SH COMMANDS
+.TP
+.BR ping " " \fIhost\fR " [" \-c " " \fIcount\fR "] [" \-i " " \fIinterval\fR "] [" \-t " " \fItimeout\fR "]"
+Send ICMP echo requests to a host and display RTT statistics (min/avg/max/jitter/loss).
+.RS
+.TP
+.B \-c, \-\-count
+Number of ping requests to send (default: 10)
+.TP
+.B \-i, \-\-interval
+Interval between pings in milliseconds (default: 1000)
+.TP
+.B \-t, \-\-timeout
+Timeout for each ping in milliseconds (default: 1000)
+.TP
+.B \-j, \-\-json
+Output results in JSON format
+.RE
+
+.TP
+.BR trace " " \fIhost\fR " [" \-m " " \fImax-hops\fR "] [" \-q " " \fIqueries\fR "]"
+Trace the network route to a host with hop RTTs.
+.RS
+.TP
+.B \-m, \-\-max\-hops
+Maximum number of hops to trace (default: 30)
+.TP
+.B \-q, \-\-queries
+Number of queries per hop (default: 3)
+.TP
+.B \-j, \-\-json
+Output results in JSON format
+.RE
+
+.TP
+.BR scan " " \fIhost\fR " " \fIports\fR " [" \-t " " \fItimeout\fR "] [" \-T " " \fIthreads\fR "]"
+Perform parallel TCP port scanning on a host.
+.RS
+.TP
+.I ports
+Port specification: range (1-1024), list (80,443,8080), or single port
+.TP
+.B \-t, \-\-timeout
+Timeout per port in milliseconds (default: 500)
+.TP
+.B \-T, \-\-threads
+Number of concurrent threads (default: 100)
+.TP
+.B \-j, \-\-json
+Output results in JSON format
+.RE
+
+.TP
+.BR bench " " \fIurl\fR " " \fIduration\fR " [" \-c " " \fIconnections\fR "] [" \-p " " \fIport\fR "]"
+HTTP benchmark tool with latency percentiles.
+.RS
+.TP
+.I url
+Target URL (e.g., example.com or example.com/path)
+.TP
+.I duration
+Test duration (e.g., 10s, 30s)
+.TP
+.B \-c, \-\-connections
+Number of concurrent connections (default: 10)
+.TP
+.B \-p, \-\-port
+Port number (default: 80)
+.TP
+.B \-j, \-\-json
+Output results in JSON format
+.RE
+
+.TP
+.BR sniff " " \fIfilter\fR " [" \-p " " \fIport\fR "] [" \-c " " \fIcount\fR "] [" \-v "]"
+Capture and display live network packets (requires root).
+.RS
+.TP
+.I filter
+Protocol filter: tcp, udp, or icmp
+.TP
+.B \-p, \-\-port
+Filter by port number
+.TP
+.B \-c, \-\-count
+Number of packets to capture (0 = unlimited)
+.TP
+.B \-v, \-\-verbose
+Show payload hex dump
+.RE
+
+.TP
+.BR iperf " " \fImode\fR " [" \fIhost\fR "] [" \-p " " \fIport\fR "] [" \-t " " \fIduration\fR "]"
+Network throughput testing (iperf-compatible).
+.RS
+.TP
+.I mode
+Either 'server' or 'client'
+.TP
+.I host
+Target host (required for client mode)
+.TP
+.B \-p, \-\-port
+Port number (default: 5201)
+.TP
+.B \-t, \-\-duration
+Test duration in seconds (default: 10)
+.RE
+
+.SH EXAMPLES
+.TP
+Send 10 pings to Google:
+.B netprobe ping google.com \-c 10
+.TP
+Trace route to GitHub API:
+.B netprobe trace api.github.com
+.TP
+Scan common ports on localhost:
+.B netprobe scan localhost 1-1024
+.TP
+HTTP benchmark with 50 connections for 10 seconds:
+.B netprobe bench httpbin.org/get 10s \-c 50
+.TP
+Capture 100 HTTPS packets:
+.B sudo netprobe sniff tcp \-p 443 \-c 100
+.TP
+Run throughput server:
+.B netprobe iperf server
+.TP
+Test throughput to server:
+.B netprobe iperf client 192.168.1.100
+
+.SH NOTES
+Some commands require root privileges:
+.IP \(bu 2
+.B ping
+requires raw ICMP socket access
+.IP \(bu 2
+.B trace
+requires raw socket access
+.IP \(bu 2
+.B sniff
+requires raw packet capture capabilities
+
+Run these commands with
+.B sudo
+or grant the binary CAP_NET_RAW capability:
+.PP
+.nf
+    sudo setcap cap_net_raw+ep /usr/local/bin/netprobe
+.fi
+
+.SH CONFIGURATION
+NetProbe can be configured via
+.I ~/.netprobe.json
+with settings for default timeout, thread count, and color preferences.
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+General error
+.TP
+.B 2
+Invalid arguments
+
+.SH AUTHOR
+NetProbe was written as a production-grade network diagnostic toolkit.
+
+.SH LICENSE
+MIT License
+
+.SH SEE ALSO
+.BR ping (8),
+.BR traceroute (8),
+.BR nmap (1),
+.BR curl (1),
+.BR iperf (1)
