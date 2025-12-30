@@ -208,5 +208,3 @@ netprobe <command> --help
 - [htop](https://htop.dev/) - Interactive process viewer
 
 ---
-
-**Built with ❤️ using modern C++20**
