@@ -98,9 +98,7 @@ int sniff(std::span<const char*> args) {
     auto positional = parser.get_positional();
     std::string filter = positional.empty() ? "tcp" : positional[0];
     
-    auto port_str = parser.get("port");
-    uint16_t filter_port = port_str ? std::stoi(*port_str) : 0;
-    
+    uint16_t filter_port = parser.get_as<uint16_t>("port").value_or(0);
     size_t count = parser.get_as<size_t>("count").value_or(0);
     bool verbose = parser.get_flag("verbose");
     
